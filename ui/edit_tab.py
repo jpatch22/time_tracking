@@ -37,6 +37,7 @@ class EditTab(ttk.Frame):
         ttk.Button(self, text="Remove Record", command=self.remove_record).grid(row=3, column=2, pady=10)
 
     def update_dates(self):
+        print("update dates")
         dates = self.data_manager.get_dates()
         self.date_combobox['values'] = dates
 
@@ -45,8 +46,8 @@ class EditTab(ttk.Frame):
         if selected_date:
             activities = self.data_manager.get_activities_by_date(selected_date)
             self.activity_listbox.delete(0, tk.END)
-            for activity, duration in activities:
-                self.activity_listbox.insert(tk.END, f"{activity} ({duration} hrs)")
+            for activity, category, duration in activities:
+                self.activity_listbox.insert(tk.END, f"{category}: {activity} ({duration} hrs)")
 
     def populate_activity_details(self, event=None):
         try:

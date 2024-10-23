@@ -69,7 +69,7 @@ class DataManager:
 
     def get_activities_by_date(self, selected_date):
         cursor = self.conn.execute('''
-            SELECT activity, duration FROM activities WHERE date=?
+            SELECT activity, category, duration FROM activities WHERE date=?
         ''', (selected_date,))
         return cursor.fetchall()
 
