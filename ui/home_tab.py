@@ -3,6 +3,7 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from data.data_manager import DataManager
+import numpy as np
 
 class HomeTab(ttk.Frame):
     def __init__(self, parent):
@@ -63,29 +64,58 @@ class HomeTab(ttk.Frame):
             self.data_manager.add_today_activity(category, activity, duration)
             self.update_chart()
 
+
     def update_chart(self):
         # Get today's activity data grouped by categories
         data = self.data_manager.get_today_activities_grouped_by_category()
 
+        # Clear the previous plot
         self.ax.clear()
+        
         categories = list(data.keys())
         activities = {}
-        
-        # Collect the activity names and their corresponding durations under each category
+
+        # Collect activity names and their durations by category
         for category, activities_data in data.items():
             for activity, duration in activities_data:
                 if activity not in activities:
                     activities[activity] = [0] * len(categories)
                 activities[activity][categories.index(category)] = duration
 
-        # Plot stacked bar chart
-        bottom_values = [0] * len(categories)
-        for activity, durations in activities.items():
-            self.ax.bar(categories, durations, bottom=bottom_values, label=activity)
-            bottom_values = [bottom_values[i] + durations[i] for i in range(len(durations))]
+        # Define a color map (or you can manually assign colors if preferred)
+        colors = plt.cm.get_cmap('tab20', len(categories))  # Using colormap for consistent category coloring
 
-        self.ax.set_title('Stacked Time Spent Today by Categories')
-        self.ax.set_ylabel('Hours')
-        self.ax.legend()
+        # Initialize bottom positions for stacking
+        bottom_values = np.zeros(len(categories))
+
+        # Plot stacked bar chart
+        for i, (activity, durations) in enumerate(activities.items()):
+            bars = self.ax.bar(categories, durations, bottom=bottom_values, label=activity, color=colors(i))
+
+            # Annotate activity name on top of each bar
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:
+                    self.ax.text(
+                        bar.get_x() + bar.get_width() / 2,  # X-coordinate
+                        bar.get_y() + height / 2,  # Y-coordinate (middle of the bar)
+                        f'{activity}',  # Activity name as label
+                        ha='center', va='center', fontsize=8, color='white', rotation=90
+                    )
+
+            # Update the bottom position for the next stacked bar
+            bottom_values += durations
+
+        # Set labels and title
+        self.ax.set_title('Stacked Time Spent Today by Categories', fontsize=14)
+        self.ax.set_ylabel('Hours', fontsize=12)
+        self.ax.set_xticks(np.arange(len(categories)))
+        self.ax.set_xticklabels(categories, fontsize=10, rotation=45, ha='right')
+
+        # Add legend
+        #self.ax.legend(title="Activities", bbox_to_anchor=(1.05, 1), loc='upper left')
+        self.figure.tight_layout()
+
+        # Draw the updated chart
         self.canvas.draw()
 
