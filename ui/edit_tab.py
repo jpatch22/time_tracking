@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from data.data_manager import DataManager
 from datetime import datetime
+import re
 
 class EditTab(ttk.Frame):
     def __init__(self, parent, garminRequest):
@@ -66,17 +67,21 @@ class EditTab(ttk.Frame):
 
     def sync_garmin(self):
         selected_date = self.date_var.get()
-        print(f"sync garmin: {selected_date}")
         parsed_data = None
         try:
             parsed_data = datetime.strptime(selected_date, "%Y-%m-%d").date()
         except:
             messagebox.showwarning("Input Error", "Please enter a valid date.")
             return
-        print(f"The parsed date is: {parsed_data}")
         activities = self.garminRequest.request_date(parsed_data)
+        existingActivities = self.data_manager.get_activities_by_date(selected_date)
+        print("he: ", existingActivities)
         try:
             for a in activities:
+                actTuple = ("", a[0], a[1])
+                print(actTuple)
+                if actTuple in existingActivities:
+                    continue
                 self.data_manager.add_activity(selected_date, "", a[1], category=a[0])
                 self.update_activity_list()  # Refresh the list
             messagebox.showinfo("Success", "Sync with Garmin Successful")
@@ -165,9 +170,10 @@ class EditTab(ttk.Frame):
                 if "No activities found" in selected:
                     return
 
+                dur = float(re.search(r"[\d.]+", selected).group())
                 activity_name = selected.split(": ")[1].split(" (")[0].strip()
 
-                self.data_manager.remove_activity(selected_date, activity_name)
+                self.data_manager.remove_activity(selected_date, activity_name, dur)
                 self.update_activity_list()  # Refresh the list
                 messagebox.showinfo("Success", "Activity removed successfully!")
             except IndexError:

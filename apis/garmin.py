@@ -21,6 +21,6 @@ class GarminRequest:
         print(activities)
         res = []
         for a in activities:
-            res.append((a["activityName"], a["duration"] / 60))
+            res.append((a["activityName"], a["duration"] / 60 / 60))
         return res
 

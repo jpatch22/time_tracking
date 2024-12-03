@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from data.data_manager import DataManager
 import numpy as np
+from datetime import date, datetime
 
 class HomeTab(ttk.Frame):
     def __init__(self, parent, garminRequest):
@@ -49,7 +51,26 @@ class HomeTab(ttk.Frame):
         self.category_combobox['values'] = categories
 
     def sync_garmin(self):
-        print("sync garmin")
+        selected_date = str(date.today())
+        parsed_data = None
+        try:
+            parsed_data = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        except:
+            messagebox.showwarning("Input Error", "Please enter a valid date.")
+            return
+        activities = self.garminRequest.request_date(parsed_data)
+        existingActivities = self.data_manager.get_activities_by_date(selected_date)
+        try:
+            for a in activities:
+                actTuple = ("", a[0], a[1])
+                print(actTuple)
+                if actTuple in existingActivities:
+                    continue
+                self.data_manager.add_activity(selected_date, "", a[1], category=a[0])
+                self.update_chart()  # Refresh the list
+            messagebox.showinfo("Success", "Sync with Garmin Successful")
+        except:
+            messagebox.showinfo("Failure", "Something went wrong!")
     
     def add_category(self):
         new_category = self.category_var.get()
