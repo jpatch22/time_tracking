@@ -6,8 +6,9 @@ from data.data_manager import DataManager
 import numpy as np
 
 class HomeTab(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, garminRequest):
         super().__init__(parent)
+        self.garminRequest = garminRequest
         self.data_manager = DataManager()
 
         self.activity_var = tk.StringVar()
@@ -23,6 +24,7 @@ class HomeTab(ttk.Frame):
 
         # Button to add new category
         ttk.Button(self, text="Add New Category", command=self.add_category).grid(row=0, column=2, padx=10, pady=10)
+        ttk.Button(self, text="Sync Garmin Activities", command=self.sync_garmin).grid(row=1, column=2, padx=10, pady=10)
 
         # Entry for recording new activity
         ttk.Label(self, text="Activity Name:").grid(row=1, column=0, padx=10, pady=10)
@@ -40,12 +42,15 @@ class HomeTab(ttk.Frame):
         self.canvas.get_tk_widget().grid(row=4, column=0, columnspan=3)
 
         self.update_chart()
-
+    
     def on_category_search(self, event):
         search_term = self.category_var.get().lower()
         categories = self.data_manager.search_categories(search_term)
         self.category_combobox['values'] = categories
 
+    def sync_garmin(self):
+        print("sync garmin")
+    
     def add_category(self):
         new_category = self.category_var.get()
         if new_category:
