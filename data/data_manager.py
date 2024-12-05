@@ -43,11 +43,11 @@ class DataManager:
                 UPDATE activities SET duration=? WHERE date=? AND activity=?
             ''', (duration, selected_date, activity))
 
-    def remove_activity(self, selected_date, activity):
+    def remove_activity(self, selected_date, activity, duration):
         with self.conn:
             self.conn.execute('''
-                DELETE FROM activities WHERE date=? AND activity=?
-            ''', (selected_date, activity))
+                DELETE FROM activities WHERE date=? AND activity=? AND duration=?
+            ''', (selected_date, activity, duration))
 
     def get_today_activities_grouped_by_category(self):
         today = str(date.today())

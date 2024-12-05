@@ -3,20 +3,21 @@ from tkinter import ttk
 from ui.home_tab import HomeTab
 from ui.edit_tab import EditTab
 from ui.summary_tab import SummaryTab
+from apis.garmin import GarminRequest
 
 class TimeTrackerApp(tk.Tk):
     def __init__(self):
         super().__init__()
-
         self.title("Time Tracker App")
         self.geometry("800x600")
 
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(expand=True, fill='both')
+        self.garminRequest = GarminRequest()
 
         # Adding tabs
-        self.home_tab = HomeTab(self.notebook)
-        self.edit_tab = EditTab(self.notebook)
+        self.home_tab = HomeTab(self.notebook, self.garminRequest)
+        self.edit_tab = EditTab(self.notebook, self.garminRequest)
         self.summary_tab = SummaryTab(self.notebook)
 
         self.notebook.add(self.home_tab, text="Home")

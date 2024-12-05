@@ -2,10 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from data.data_manager import DataManager
+from datetime import datetime
+import re
 
 class EditTab(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, garminRequest):
         super().__init__(parent)
+        self.garminRequest = garminRequest
         self.data_manager = DataManager()
 
         # Variables to hold form data
@@ -29,6 +32,8 @@ class EditTab(ttk.Frame):
         self.manual_date_entry = ttk.Entry(self, textvariable=self.date_var)  # Bind same variable to sync
         self.manual_date_entry.grid(row=1, column=1, padx=10, pady=5)
         self.manual_date_entry.bind("<Return>", self.update_activity_list)  # Bind the Enter key to trigger update
+
+        ttk.Button(self, text="Sync Garmin Activities", command=self.sync_garmin).grid(row=1, column=2, padx=10, pady=5)
 
         # Category Entry
         ttk.Label(self, text="Category:").grid(row=2, column=0, padx=10, pady=5)
@@ -59,6 +64,30 @@ class EditTab(ttk.Frame):
         """Updates the combobox with available dates from the database."""
         dates = self.data_manager.get_dates()
         self.date_combobox['values'] = dates
+
+    def sync_garmin(self):
+        selected_date = self.date_var.get()
+        parsed_data = None
+        try:
+            parsed_data = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        except:
+            messagebox.showwarning("Input Error", "Please enter a valid date.")
+            return
+        activities = self.garminRequest.request_date(parsed_data)
+        existingActivities = self.data_manager.get_activities_by_date(selected_date)
+        print("he: ", existingActivities)
+        try:
+            for a in activities:
+                actTuple = ("", a[0], a[1])
+                print(actTuple)
+                if actTuple in existingActivities:
+                    continue
+                self.data_manager.add_activity(selected_date, "", a[1], category=a[0])
+                self.update_activity_list()  # Refresh the list
+            messagebox.showinfo("Success", "Sync with Garmin Successful")
+        except:
+            messagebox.showinfo("Failure", "Something went wrong!")
+            
 
     def update_activity_list(self, event=None):
         """Updates the activity list based on the selected or entered date."""
@@ -141,9 +170,10 @@ class EditTab(ttk.Frame):
                 if "No activities found" in selected:
                     return
 
+                dur = float(re.search(r"[\d.]+", selected).group())
                 activity_name = selected.split(": ")[1].split(" (")[0].strip()
 
-                self.data_manager.remove_activity(selected_date, activity_name)
+                self.data_manager.remove_activity(selected_date, activity_name, dur)
                 self.update_activity_list()  # Refresh the list
                 messagebox.showinfo("Success", "Activity removed successfully!")
             except IndexError:
