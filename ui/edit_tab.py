@@ -60,6 +60,51 @@ class EditTab(ttk.Frame):
         ttk.Button(self, text="Edit Record", command=self.edit_record).grid(row=6, column=1, pady=10)
         ttk.Button(self, text="Remove Record", command=self.remove_record).grid(row=6, column=2, pady=10)
 
+        # KPIs
+        self.total_ptime_label = ttk.Label(self, text=f"Total Productive time: {0}")
+        self.total_ptime_label.grid(row=0, column = 3, padx = 10, pady=10)
+        self.extime_label = ttk.Label(self, text=f"Total Exercise time: {0}")
+        self.extime_label.grid(row=1, column = 3, padx = 10, pady=10)
+        self.imtime_label = ttk.Label(self, text=f"Total Improvement time: {0}")
+        self.imtime_label .grid(row=2, column = 3, padx = 10, pady=10)
+        self.prod_ratio = ttk.Label(self, text=f"Productivity Ratio: {0}")
+        self.prod_ratio.grid(row=2, column = 3, padx = 10, pady=10)
+
+    def update_kpis(self):
+        tTime, imTime, exTime = self.parseActivities()
+        self.total_ptime_label.configure(text=f"Total Productive time: {tTime} hours")
+        self.extime_label.configure(text=f"Total Exercise time: {exTime} hours")
+        self.imtime_label.configure(text=f"Total Improvement time: {imTime} hours")
+        self.prod_ratio.configure(text=f"Total productivity/tracked: {tTime / self.get_current_hours_passed()}")
+
+    @staticmethod
+    def get_current_hours_passed():
+        now = datetime.now()
+        hours = now.hour
+        minutes = now.minute
+        # Convert minutes to a fraction of an hour
+        fractional_hours = minutes / 60
+        # Total hours passed in the day
+        total_hours = hours + fractional_hours
+        return total_hours
+
+    def parseActivities(self):
+        # Returns (total_prod_time, total_improvement_time, total_ex_time)
+        data = self.data_manager.get_today_activities_grouped_by_category()
+        exCats = []
+        imCats = []
+        exTime = 0
+        tTime = 0
+        imTime = 0
+        for cat in data:
+            for _, duration in data[cat]:
+                if cat in exCats:
+                    exTime += duration
+                if cat in imCats:
+                    imTime += duration
+                tTime += duration
+        return (tTime, imTime, exTime)
+
     def update_dates(self):
         """Updates the combobox with available dates from the database."""
         dates = self.data_manager.get_dates()
@@ -90,6 +135,7 @@ class EditTab(ttk.Frame):
             
 
     def update_activity_list(self, event=None):
+        self.update_kpis()
         """Updates the activity list based on the selected or entered date."""
         selected_date = self.date_var.get()
         self.activity_listbox.delete(0, tk.END)  # Clear the listbox first
